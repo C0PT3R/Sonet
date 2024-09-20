@@ -1,0 +1,21 @@
+{
+    "name": "c0pt3r/sonet",
+    "description": "(!!WIP!!) A simple framework for websites/webAPIs",
+    "type": "library",
+    "license": "ISC",
+    "authors": [
+        {
+            "name": "Élie Gendron",
+            "email": "1578906+C0PT3R@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "twig/twig": "^3.11"
+    },
+	"autoload": {
+        "psr-4": {
+            "Sonet\\App\\": "src"
+        }
+    }
+}
