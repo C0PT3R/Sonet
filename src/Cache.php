@@ -3,6 +3,7 @@
 namespace Sonet;
 
 
+
 class Cache {
 	
 	private $renderer;
