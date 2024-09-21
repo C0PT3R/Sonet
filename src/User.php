@@ -29,9 +29,9 @@ class User {
 		
 		if (!isset($_SESSION['username'])) {
 			if (isset($_COOKIE['Auth'])) {
-				if (!$this->loginFromCookie()) $this->connect($GLOBALS['Sonet_default_user']);
+				if (!$this->loginFromCookie()) $this->connect(SONET_DEFAULT_USER);
 			}
-			else $this->connect($GLOBALS['Sonet_default_user']);
+			else $this->connect(SONET_DEFAULT_USER);
 		}
 	}
 	
@@ -66,7 +66,7 @@ class User {
 		if ($persistant) {
 			$auth = $user['username'] . '\\\\--' . password_hash($this->getAuthString($user), PASSWORD_BCRYPT);
 			$expire = time() + 30 * 86400;
-			setcookie('Auth', $auth, $expire, '/', null, true, true);
+			setcookie('Auth', $auth, $expire, '/', "", true, true);
 		}
 		
 		$_SESSION['username']   = $user['username'];
@@ -145,9 +145,9 @@ class User {
 	
 	public function logout() {
 		if (isset($_COOKIE['Auth']))
-			setcookie('Auth', '', time() - 3600, '/', null, true, true);
+			setcookie('Auth', '', 0, '/', "", true, true);
 		
-		$_SESSION = array();
+		$_SESSION = [];
 		session_destroy();
 	}
 	

@@ -2,6 +2,9 @@
 
 namespace Sonet;
 
+require_once getcwd() . DIRECTORY_SEPARATOR . "sonet_config.php";
+require_once "default.php";
+
 
 class Core extends Router {
 

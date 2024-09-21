@@ -7,6 +7,7 @@ class Response {
 	
 	public $status;
 	private $root_path;
+	public $required_level;
 	
 	
 	public function send($body) {
