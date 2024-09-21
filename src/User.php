@@ -8,7 +8,7 @@ class User {
 	private $database;
 	private $messages = [];
 	
-	private $callbacks = [
+	private $handlers = [
 		'LoginSuccess' => null,
 		'LoginError'   => null
 	];
@@ -38,7 +38,7 @@ class User {
 	
 	public function getTitle($level = '') {
 		if (empty($level)) $level = $_SESSION['user_level'];
-		return $GLOBALS['Sonet_user_levels'][$level]['title'];
+		return SONET_USR_LVLS[$level]['title'];
 	}
 	
 	
@@ -76,10 +76,10 @@ class User {
 	
 	
 	public function on($status, $callback) {
-		$keys = array_keys($this->callbacks);
+		$keys = array_keys($this->handlers);
 		
 		if (in_array($status, $keys))
-			$this->callbacks[$status] = $callback;
+			$this->handlers[$status] = $callback;
 		else {
 			$values = implode(', ', $keys);
 			trigger_error("Can not set callback for user status '$status'. Possible values are: $values", E_USER_ERROR);
@@ -92,25 +92,34 @@ class User {
 		$password   = trim($_POST[LOGIN_FIELD_PASSWORD]);
 		$persistant = isset($_POST[LOGIN_FIELD_PERSISTANT]) ? true : false;
 	
-		if (empty($username))
-			return call_user_func($this->callbacks['LoginError'], $this, 'Veuillez entrer votre nom d\'utilisateur.');
-		if (empty($password))
-			return call_user_func($this->callbacks['LoginError'], $this, 'Veuillez entrer votre mot de passe.');
+		if (empty($username)) {
+			if (is_callable($this->handlers['LoginError']))
+				return call_user_func($this->handlers['LoginError'], $this, 'Veuillez entrer votre nom d\'utilisateur.');
+		}
+		if (empty($password)) {
+			if (is_callable($this->handlers['LoginError']))
+				return call_user_func($this->handlers['LoginError'], $this, 'Veuillez entrer votre mot de passe.');
+		}
 		
 		$sql = "SELECT * FROM users WHERE username = '$username'";
 		$result = $this->database->query($sql);
 		
-		if ($result->rowCount() !== 1)
-			return call_user_func($this->callbacks['LoginError'], $this, 'Il n\'y a pas de compte avec ce nom d\'utilisateur.');
-		
+		if ($result->rowCount() !== 1) {
+			if (is_callable($this->handlers['LoginError']))
+				return call_user_func($this->handlers['LoginError'], $this, 'Il n\'y a pas de compte avec ce nom d\'utilisateur.');
+		}
+
 		$user = $result->fetch();
 		
-		if (!password_verify($password, $user['password']))
-			return call_user_func($this->callbacks['LoginError'], $this, 'Le mot de passe ne correspond pas.');
-		
+		if (!password_verify($password, $user['password'])) {
+			if (is_callable($this->handlers['LoginError']))
+				return call_user_func($this->handlers['LoginError'], $this, 'Le mot de passe ne correspond pas.');
+		}
+
 		$this->connect($user, $persistant);
 		
-		if (is_callable($this->callbacks['LoginSuccess'])) call_user_func($this->callbacks['LoginSuccess']);
+		if (is_callable($this->handlers['LoginSuccess']))
+			call_user_func($this->handlers['LoginSuccess']);
 		
 		return true;
 	}

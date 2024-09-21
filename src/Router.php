@@ -92,12 +92,12 @@ class Router {
 	private function get_level_str($route) {
 		if (is_array($route->required_level)) {
 			foreach ($route->required_level as $level) {
-				$levels[] = $GLOBALS['Sonet_user_levels'][$level]['title'];
+				$levels[] = SONET_USR_LVLS[$level]['title'];
 			}
 			return implode(', ', $levels) . ' exclusivement';
 		}
 		else {
-			return $GLOBALS['Sonet_user_levels'][$route->required_level]['title'] . ' ou supérieur';
+			return SONET_USR_LVLS[$route->required_level]['title'] . ' ou supérieur';
 		}
 	}
 	

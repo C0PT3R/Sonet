@@ -1,12 +1,12 @@
 <?php
 
 $router->get('/js/user-levels', function($req, $res) {
-	$levels = $GLOBALS['Sonet_user_levels'];
+	$levels = SONET_USR_LVLS;
 	$last = max(array_keys($levels));
 	
 	header('Content-type: text/javascript');
 	
-	echo "window['CWSE_userLevels'] = [\n";
+	echo "window['SONET_USR_LVLS'] = [\n";
 	
 	foreach ($levels as $i=>$level) {
 		echo "\t{\n";
@@ -22,11 +22,9 @@ $router->get('/js/user-levels', function($req, $res) {
 $router->get('/js/user-data', function($req, $res) {
 	header('Content-type: text/javascript');
 	
-	echo "window['CWSE_userData'] = {\n";
+	echo "window['SONET_USR_INFO'] = {\n";
 	echo "\tusername: '" . $_SESSION['username']   . "',\n";
 	echo "\tlevel: "     . $_SESSION['user_level'] . ",\n";
 	echo "\ttitle: '"    . $req->user->getTitle() . "'\n";
 	echo "};";
 });
-
-?>
