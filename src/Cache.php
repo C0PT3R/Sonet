@@ -3,7 +3,6 @@
 namespace Sonet;
 
 
-
 class Cache {
 	
 	private $renderer;
@@ -42,15 +41,13 @@ class Cache {
 		if ($this->period > 0) {
 			if (file_exists($this->location)) {
 				$this->content = file_get_contents($this->location);
-			}
-			else {
+			} else {
 				$content = $this->renderer->render();
 				file_put_contents($this->location, $content);
 				$this->removeOlderVersions();
 				$this->content = $content;
 			}
-		}
-		else {
+		} else {
 			$this->content = $this->renderer->render();
 		}
 	}
@@ -69,18 +66,19 @@ class Cache {
 	private function cleanupRoutine() {
 		$this->last_cleanup = $this->getLastCleanup();
 		
-		if (false === $this->last_cleanup)
+		if (false === $this->last_cleanup) {
 			$this->reset();
-			
-		else if ($this->last_cleanup < $this->cleanup_timelapse->start)
+		} else if ($this->last_cleanup < $this->cleanup_timelapse->start) {
 			$this->reset();
+		}
 	}
 	
 	private function getLastCleanup() {
-		if (file_exists($this->cleanup_file))
+		if (file_exists($this->cleanup_file)) {
 			return file_get_contents($this->cleanup_file);
-		else
+		} else {
 			return false;
+		}
 	}
 	
 	private function reset() {

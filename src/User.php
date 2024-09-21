@@ -30,8 +30,9 @@ class User {
 		if (!isset($_SESSION['username'])) {
 			if (isset($_COOKIE['Auth'])) {
 				if (!$this->loginFromCookie()) $this->connect(SONET_DEFAULT_USER);
+			} else {
+				$this->connect(SONET_DEFAULT_USER);
 			}
-			else $this->connect(SONET_DEFAULT_USER);
 		}
 	}
 	
@@ -53,8 +54,7 @@ class User {
 				return $this->messages[$name];
 			else
 				return null;
-		}
-		else {
+		} else {
 			$_SESSION['flash-' . $name] = $message;
 			$this->messages[$name] = $message;
 			return true;
@@ -78,9 +78,9 @@ class User {
 	public function on($status, $callback) {
 		$keys = array_keys($this->handlers);
 		
-		if (in_array($status, $keys))
+		if (in_array($status, $keys)) {
 			$this->handlers[$status] = $callback;
-		else {
+		} else {
 			$values = implode(', ', $keys);
 			trigger_error("Can not set callback for user status '$status'. Possible values are: $values", E_USER_ERROR);
 		}

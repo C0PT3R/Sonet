@@ -8,10 +8,6 @@ define('CACHE_KEY', 'd12414bc18e5e8e4e922ad7e');
 define('CACHE_CLEANUP_INTERVAL', 24);
 
 
-foreach (SONET_USR_LVLS as $k => $v) {
-	define($v["const"], $k);
-}
-
 
 const SONET_DEFAULT_USER = [
 	'username' => "Guest",

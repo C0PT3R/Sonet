@@ -2,7 +2,42 @@
 
 namespace Sonet;
 
-require_once getcwd() . DIRECTORY_SEPARATOR . "sonet_config.php";
+//require_once getcwd() . DIRECTORY_SEPARATOR . "sonet_config.php";
+
+$config_file_path = getcwd() . DIRECTORY_SEPARATOR . "sonet.json";
+$config = json_decode(file_get_contents($config_file_path));
+
+define("DB_HOST", $config->database->host);
+define("DB_PORT", $config->database->port);
+define("DB_USER", $config->database->user);
+define("DB_PASS", $config->database->password);
+define("DB_NAME", $config->database->name);
+
+foreach ($config->{"user-levels"} as $lvl) {
+	define($lvl->name, $lvl->level);
+}
+
+/* Define user levels */
+const SONET_USR_LVLS = [
+	0 => [
+		'const' => 'USER_LVL_GUEST',
+		'title' => 'invité'
+	],
+	1 => [
+		'const' => 'USER_LVL_BASIC',
+		'title' => 'basique'
+	],
+	5 => [
+		'const' => 'USER_LVL_VIP',
+		'title' => 'VIP'
+	],
+	10 => [
+		'const' => 'USER_LVL_ADMIN',
+		'title' => 'administrateur'
+	]
+];
+
+
 require_once "default.php";
 
 
@@ -21,7 +56,7 @@ class Core extends Router {
 		parent::__construct();
 
 		try {
-			$this->database = new \PDO(DB_DSN, DB_USER, DB_PASSWORD);
+			$this->database = new \PDO(DB_DSN, DB_USER, DB_PASS);
 		} catch (\Exception $e) {
 			exit('PDO ERROR: ' . $e->getMessage());
 		}

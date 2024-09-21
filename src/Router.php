@@ -95,8 +95,7 @@ class Router {
 				$levels[] = SONET_USR_LVLS[$level]['title'];
 			}
 			return implode(', ', $levels) . ' exclusivement';
-		}
-		else {
+		} else {
 			return SONET_USR_LVLS[$route->required_level]['title'] . ' ou supérieur';
 		}
 	}

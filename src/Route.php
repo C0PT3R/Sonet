@@ -57,10 +57,10 @@ class Route {
 
 			// Call the route handler
 			return call_user_func($this->handler, $request, $response);
-		}
-		else
+		} else {
 			$response->status = 403;
 			return false;
+		}
 	}
 	
 }

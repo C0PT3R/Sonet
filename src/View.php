@@ -66,8 +66,7 @@ class View implements Cacheable {
 		
 		if (count($args) === 1 && is_array($args[0])) {
 			foreach ($args[0] as $k=>$v) $this->assign($k, $v);
-		}
-		else {
+		} else {
 			$key = $args[0];
 			$value = $args[1];
 			

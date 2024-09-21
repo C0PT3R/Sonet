@@ -30,13 +30,11 @@ class Response {
 					header('Content-type: application/json');
 					echo json_encode($body);
 			}
-		}
-		
-		else if (is_string($body))
+		} else if (is_string($body)) {
 			echo $body;
-		
-		else
+		} else {
 			trigger_error("Can not send this data.", E_USER_ERROR);
+		}
 	}
 
 
