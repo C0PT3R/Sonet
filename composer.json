@@ -2,7 +2,7 @@
     "name": "c0pt3r/sonet",
     "description": "(!!WIP!!) A simple framework for websites/webAPIs",
     "type": "library",
-    "license": "ISC",
+    "license": "MIT",
     "authors": [
         {
             "name": "Élie Gendron",
@@ -15,7 +15,7 @@
     },
 	"autoload": {
         "psr-4": {
-            "Sonet\\App\\": "src"
+            "Sonet\\": "src"
         }
     }
 }

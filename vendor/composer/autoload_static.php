@@ -29,7 +29,7 @@ class ComposerStaticInit939f85bf5fdbb1bb813f1b931f0cb38c
             'Symfony\\Polyfill\\Php80\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
             'Symfony\\Polyfill\\Ctype\\' => 23,
-            'Sonet\\App\\' => 10,
+            'Sonet\\' => 6,
         ),
     );
 
@@ -54,7 +54,7 @@ class ComposerStaticInit939f85bf5fdbb1bb813f1b931f0cb38c
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-ctype',
         ),
-        'Sonet\\App\\' => 
+        'Sonet\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

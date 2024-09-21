@@ -27,7 +27,7 @@ class Core extends Router {
 		$this->request = new Request($this->user);
 		$this->response = new Response();
 
-		$this->mount(SONET_DIR . '/routes/system.php', '/system');
+		$this->mount(__DIR__ . '\\system_routes.php', '/system');
 	}
 
 
