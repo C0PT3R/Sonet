@@ -9,8 +9,8 @@ class User {
 	private $messages = [];
 	
 	private $handlers = [
-		'LoginSuccess' => null,
-		'LoginError'   => null
+		'LoginSuccess' => "",
+		'LoginError'   => ""
 	];
 	
 	
@@ -26,20 +26,6 @@ class User {
 				unset($_SESSION[$k]);
 			}
 		}
-		
-		if (!isset($_SESSION['username'])) {
-			if (isset($_COOKIE['Auth'])) {
-				if (!$this->loginFromCookie()) $this->connect(SONET_DEFAULT_USER);
-			} else {
-				$this->connect(SONET_DEFAULT_USER);
-			}
-		}
-	}
-	
-	
-	public function getTitle($level = '') {
-		if (empty($level)) $level = $_SESSION['user_level'];
-		return SONET_USR_LVLS[$level]['title'];
 	}
 	
 	
@@ -62,43 +48,45 @@ class User {
 	}
 	
 	
-	private function connect($user, $persistant = false) {
+	private function connect($db_user, $persistant = false) {
 		if ($persistant) {
-			$auth = $user['username'] . '\\\\--' . password_hash($this->getAuthString($user), PASSWORD_BCRYPT);
+			$auth = $db_user['username'] . '\\\\--' . password_hash($this->getAuthString($db_user), PASSWORD_BCRYPT);
 			$expire = time() + 30 * 86400;
 			setcookie('Auth', $auth, $expire, '/', "", true, true);
 		}
 		
-		$_SESSION['username']   = $user['username'];
-		$_SESSION['user_level'] = $user['level'];
-		$_SESSION['user_title'] = $this->getTitle();
+		$_SESSION['username'] = $db_user['username'];
+		$_SESSION['user_group'] = $db_user['group'];
 	}
 	
 	
-	public function on($status, $callback) {
+	public function on($status, callable $callback) {
 		$keys = array_keys($this->handlers);
 		
 		if (in_array($status, $keys)) {
 			$this->handlers[$status] = $callback;
 		} else {
-			$values = implode(', ', $keys);
+			$values = join(', ', $keys);
 			trigger_error("Can not set callback for user status '$status'. Possible values are: $values", E_USER_ERROR);
 		}
 	}
 	
 	
 	public function login() {
-		$username   = trim($_POST[LOGIN_FIELD_USERNAME]);
-		$password   = trim($_POST[LOGIN_FIELD_PASSWORD]);
-		$persistant = isset($_POST[LOGIN_FIELD_PERSISTANT]) ? true : false;
+		$fields = Config::get()->fieldnames;
+		$login_errors = Config::get()->login_errors;
+
+		$username = trim($_POST[$fields->login_username]);
+		$password = trim($_POST[$fields->login_password]);
+		$persistant = isset($_POST[$fields->login_persistent]) ? true : false;
 	
 		if (empty($username)) {
 			if (is_callable($this->handlers['LoginError']))
-				return call_user_func($this->handlers['LoginError'], $this, 'Veuillez entrer votre nom d\'utilisateur.');
+				return call_user_func($this->handlers['LoginError'], $this, $login_errors->username_missing);
 		}
 		if (empty($password)) {
 			if (is_callable($this->handlers['LoginError']))
-				return call_user_func($this->handlers['LoginError'], $this, 'Veuillez entrer votre mot de passe.');
+				return call_user_func($this->handlers['LoginError'], $this, $login_errors->password_missing);
 		}
 		
 		$sql = "SELECT * FROM users WHERE username = '$username'";
@@ -106,17 +94,17 @@ class User {
 		
 		if ($result->rowCount() !== 1) {
 			if (is_callable($this->handlers['LoginError']))
-				return call_user_func($this->handlers['LoginError'], $this, 'Il n\'y a pas de compte avec ce nom d\'utilisateur.');
+				return call_user_func($this->handlers['LoginError'], $this, $login_errors->no_such_user);
 		}
 
-		$user = $result->fetch();
+		$db_user = $result->fetch();
 		
-		if (!password_verify($password, $user['password'])) {
+		if (!password_verify($password, $db_user['password'])) {
 			if (is_callable($this->handlers['LoginError']))
-				return call_user_func($this->handlers['LoginError'], $this, 'Le mot de passe ne correspond pas.');
+				return call_user_func($this->handlers['LoginError'], $this, $login_errors->wrong_password);
 		}
 
-		$this->connect($user, $persistant);
+		$this->connect($db_user, $persistant);
 		
 		if (is_callable($this->handlers['LoginSuccess']))
 			call_user_func($this->handlers['LoginSuccess']);
@@ -132,10 +120,10 @@ class User {
 		
 		$sql = "SELECT * FROM users WHERE username = '$username'";
 		$result = $this->database->query($sql);
-		$user = $result->fetch();
+		$db_user = $result->fetch();
 		
-		if (password_verify($this->getAuthString($user), $auth_key)) {
-			$this->connect($user, true);
+		if (password_verify($this->getAuthString($db_user), $auth_key)) {
+			$this->connect($db_user, true);
 			return true;
 		}
 		

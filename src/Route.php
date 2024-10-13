@@ -4,54 +4,36 @@ namespace Sonet;
 
 
 class Route {
-	
-	private $path;
+
+	private Router $router;
+	private string $path;
 	private $handler;
-	public  $required_level;
-	private $params = [];
+	public array $requirements;
+	private array $params = [];
 	
 	
-	public function __construct($path, $handler, $required_level) {
+	public function __construct(Router $router, string $path, callable $handler, array $requirements) {
+		$this->router = $router;
 		$this->path = $path;
 		$this->handler = $handler;
-		$this->required_level = $required_level;
+		$this->requirements = $requirements;
 	}
 	
 	
-	private function getParamNames() {
-		preg_match_all('#:([\w\-\_]+)#', $this->path, $params);
-		return $params[1];
+	public function match($request) {
+		return VirtualPath::matchesURI($this->path, $request->uri);
 	}
 	
 	
-	public function match($url) {
-		$pattern = '#^' . preg_replace('#:([\w\-\_]+)#', '([^/]+)', trim($this->path, '/')) . '$#i';
-			
-		if (!preg_match($pattern, trim($url, '/'), $params)) return false;
-		
-		array_shift($params);
-		$this->params = $params;
-		return true;
-	}
-	
-	
-	private function checkUserLevel() {
-		$user_level = $_SESSION['user_level'];
-		
-		if (is_array($this->required_level))
-			return in_array($user_level, $this->required_level);
-		else
-			return ($user_level >= $this->required_level) ? true : false;
+	private function checkUserPrivilege() {
+		$group = (isset($_SESSION["user_group"]) && !empty($_SESSION["user_group"])) ? $_SESSION["user_group"] : "guest";
+		return UserGroup::get($group)->hasPrivilege($this->requirements);
 	}
 	
 	
 	public function call($request, $response) {
-		if ($this->checkUserLevel()) {
-			$pnames = $this->getParamNames();
-			
-			for ($i = 0; $i < count($this->params); $i++) {
-				$request->params->{$pnames[$i]} = $this->params[$i];
-			}
+		if ($this->checkUserPrivilege()) {
+			$request->params = VirtualPath::parseParams($this->path, $request->uri);
 			
 			$response->status = 200;
 

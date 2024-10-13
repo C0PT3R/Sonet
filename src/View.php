@@ -3,7 +3,7 @@
 namespace Sonet;
 
 
-class View implements Cacheable {
+final class View implements Cacheable {
 	
 	private $templates_path = 'templates';
 	private $engine;
@@ -13,7 +13,7 @@ class View implements Cacheable {
 	private $period = 0;
 	
 	
-	private function __construct($template, $context = null) {
+	public function __construct($template, $context = []) {
 		$loader = new \Twig\Loader\FilesystemLoader("./{$this->templates_path}");
 		
 		$this->engine = new \Twig\Environment($loader, [
@@ -22,24 +22,18 @@ class View implements Cacheable {
 
 		$this->assign([
 			'path' => "/{$this->templates_path}",
+			'fieldnames' => Config::get()->fieldnames,
 			'user' => [
-				'username' => $_SESSION['username'],
-				'level'    => $_SESSION['user_level'],
-				'title'    => $_SESSION['user_title'],
-				'isLogged' => ($_SESSION['user_level'] > USER_LVL_GUEST) ? true : false,
-				'isAdmin'  => ($_SESSION['user_level'] == USER_LVL_ADMIN) ? true : false
+				'username' => $_SESSION['username'] ?? "Guest" . uniqid(),
+				'group'    => $_SESSION['user_group'] ?? "guest",
+				'isLogged' => (!empty($_SESSION['user_group'])) ? true : false,
+				'isAdmin'  => (isset($_SESSION['user_group']) && $_SESSION['user_group'] == "administrateur") ? true : false
 			]
 		]);
 		
 		$this->assign($context);
 		
 		$this->template  = $template;
-	}
-
-
-	public static function static($template, $data = []) {
-		$instance = new self($template, $data);
-		return $instance;
 	}
 	
 	
@@ -80,9 +74,9 @@ class View implements Cacheable {
 	}
 	
 	
-	public function addPrerender($prerender) {
+	public function prepare($prerender) {
 		if (is_callable($prerender))
-			$this->prerenders[] = $prerender; //->bindTo($this);
+			$this->prerenders[] = \Closure::bind($prerender, $this);
 		else
 			trigger_error("Prerender is not callable.", E_USER_ERROR);
 		

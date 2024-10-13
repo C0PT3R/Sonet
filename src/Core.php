@@ -2,61 +2,24 @@
 
 namespace Sonet;
 
-//require_once getcwd() . DIRECTORY_SEPARATOR . "sonet_config.php";
 
-$config_file_path = getcwd() . DIRECTORY_SEPARATOR . "sonet.json";
-$config = json_decode(file_get_contents($config_file_path));
-
-define("DB_HOST", $config->database->host);
-define("DB_PORT", $config->database->port);
-define("DB_USER", $config->database->user);
-define("DB_PASS", $config->database->password);
-define("DB_NAME", $config->database->name);
-
-foreach ($config->{"user-levels"} as $lvl) {
-	define($lvl->name, $lvl->level);
-}
-
-/* Define user levels */
-const SONET_USR_LVLS = [
-	0 => [
-		'const' => 'USER_LVL_GUEST',
-		'title' => 'invité'
-	],
-	1 => [
-		'const' => 'USER_LVL_BASIC',
-		'title' => 'basique'
-	],
-	5 => [
-		'const' => 'USER_LVL_VIP',
-		'title' => 'VIP'
-	],
-	10 => [
-		'const' => 'USER_LVL_ADMIN',
-		'title' => 'administrateur'
-	]
-];
-
-
-require_once "default.php";
-
-
-class Core extends Router {
+final class Core extends Router {
 
 	private static $instance;
-
 	private $database;
 	private $user;
 	private $request;
 	private $response;
-	private $routers;
+	private $routers = [];
 
 
 	private function __construct() {
-		parent::__construct();
+		parent::__construct('/');
+
+		$dbconf = Config::get()->database;
 
 		try {
-			$this->database = new \PDO(DB_DSN, DB_USER, DB_PASS);
+			$this->database = new \PDO($dbconf->DSN, $dbconf->user, $dbconf->password);
 		} catch (\Exception $e) {
 			exit('PDO ERROR: ' . $e->getMessage());
 		}
@@ -65,7 +28,7 @@ class Core extends Router {
 		$this->request = new Request($this->user);
 		$this->response = new Response();
 
-		$this->mount(__DIR__ . '\\system_routes.php', '/system');
+		$this->mount(__DIR__ . DIRECTORY_SEPARATOR . 'system_routes.php', '/system');
 	}
 
 
@@ -77,25 +40,10 @@ class Core extends Router {
 	}
 
 
-	public static function normalizePath(...$paths) {
-		$results = [];
-
-		foreach ($paths as $path) {
-			foreach (explode('/', $path) as $value) {
-				if (!empty($value))
-					$results[] = $value;
-			}
-		}
-
-		return "/" . join("/", $results);
-	}
-
-
-	public function mount($routes_file, $target = '') {
-		$target = trim($target, '/');
-
-		if (empty($target)) {
+	public function mount($routes_file, $target = '/') {
+		if ($target == '/') {
 			$router = $this;
+			$this->directory = $target;
 		} else {
 			if (!isset($this->routers[$target]))
 				$this->routers[$target] = new Router($target);
@@ -109,10 +57,9 @@ class Core extends Router {
 	}
 
 
-	public function run()
-	{
+	public function run() {
 		foreach ($this->routers as $router) {
-			if ($router->match($this->request->path)) {
+			if ($router->match($this->request)) {
 				return $router->callRoute($this->request, $this->response);
 			}
 		}

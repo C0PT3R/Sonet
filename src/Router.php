@@ -5,7 +5,7 @@ namespace Sonet;
 
 class Router {
 	
-	public $root_path;
+	public $directory;
 	
 	private static $routes = [
 		'GET'    => [],
@@ -25,47 +25,51 @@ class Router {
 	];
 	
 	
-	public function __construct($root_path = '') {
-		$this->root_path = trim($root_path, '/');
+	public function __construct($directory) {
+		$this->directory = VirtualPath::resolve($directory);
 	}
 	
 	
-	public function get($path, $handler, $required_level = USER_LVL_GUEST) {
-		return $this->createRoute('GET', $path, $handler, $required_level);
+	public function get(string|array $path, callable $handler, array $requirements = []) {
+		return $this->createRoute('GET', $path, $handler, $requirements);
 	}
 	
 	
-	public function post($path, $handler, $required_level = USER_LVL_GUEST) {
-		return $this->createRoute('POST', $path, $handler, $required_level);
+	public function post(string|array $path, callable $handler, array $requirements = []) {
+		return $this->createRoute('POST', $path, $handler, $requirements);
 	}
 	
 	
-	public function put($path, $handler, $required_level = USER_LVL_GUEST) {
-		return $this->createRoute('PUT', $path, $handler, $required_level);
+	public function put(string|array $path, callable $handler, array $requirements = []) {
+		return $this->createRoute('PUT', $path, $handler, $requirements);
 	}
 	
 	
-	public function delete($path, $handler, $required_level = USER_LVL_GUEST) {
-		return $this->createRoute('DELETE', $path, $handler, $required_level);
+	public function delete(string|array $path, callable $handler, array $requirements = []) {
+		return $this->createRoute('DELETE', $path, $handler, $requirements);
 	}
 	
 	
-	private function createRoute($method, $path, $handler, $required_level) {
+	private function createRoute(string $method, string $path, callable $handler, array $privileges) {
 		if (is_array($path)) {
 			foreach ($path as $p) {
-				$routes[] = $this->createRoute($method, $p, $handler, $required_level);
+				$routes[] = $this->createRoute($method, $p, $handler, $privileges);
 			}
 			return $routes;
 		} else {
-			$url = Core::normalizePath($this->root_path, $path);
-			$route = new Route($url, $handler, $required_level);
-			Router::$routes[$method][] = $route;
+			$v_path = VirtualPath::build($this->directory, $path);
+
+			foreach ($v_path as $p) {
+				$route = new Route($this, $p, $handler, $privileges);
+				self::$routes[$method][] = $route;
+			}
+			
 			return $route;
 		}
 	}
 	
 	
-	public function on($status, $handler) {
+	public function on(int|string $status, callable $handler) {
 		if (!is_callable($handler))
 			trigger_error("Handler is not callable", E_USER_ERROR);
 		
@@ -73,7 +77,7 @@ class Router {
 			$code = array_search($status, $this->aliases);
 			
 			if (!$code) {
-				$values = implode(', ', $this->aliases);
+				$values = join(', ', $this->aliases);
 				trigger_error("Can not set handler for status '$status'. Possible values are: $values", E_USER_ERROR);
 			}
 			
@@ -81,7 +85,7 @@ class Router {
 		}
 		
 		if (!array_key_exists($status, $this->handlers)) {
-			$values = implode(', ', array_keys($this->handlers));
+			$values = join(', ', array_keys($this->handlers));
 			trigger_error("Can not set handler for status '$status'. Possible values are: $values", E_USER_ERROR);
 		}
 		
@@ -89,39 +93,26 @@ class Router {
 	}
 	
 	
-	private function get_level_str($route) {
-		if (is_array($route->required_level)) {
-			foreach ($route->required_level as $level) {
-				$levels[] = SONET_USR_LVLS[$level]['title'];
-			}
-			return implode(', ', $levels) . ' exclusivement';
-		} else {
-			return SONET_USR_LVLS[$route->required_level]['title'] . ' ou supérieur';
-		}
-	}
-	
-	
-	public function match($request_path) {
-		if (empty(trim($this->root_path, '/')))
+	public function match($request) {
+		if ($this->directory === '/')
 			return true;
 		
-		$request_path = explode('/', trim($request_path, '/'));
-		$router_path  = explode('/', trim($this->root_path, '/'));
+		$request_segments = explode('/', trim($request->uri, '/'));
+		$router_segments  = explode('/', trim($this->directory, '/'));
 		
-		foreach ($router_path as $k=>$v) {
-			if ($request_path[$k] != $v) return false;
+		foreach ($router_segments as $k=>$v) {
+			if ($request_segments[$k] != $v) return false;
 		}
 		
 		return true;
 	}
 	
 	
-	// TODO: merge with Sonet\Core->call.
 	public function callRoute($request, $response) {
-		foreach (Router::$routes[$request->method] as $route) {
-			if ($route->match($request->path)) {
+		foreach (self::$routes[$request->method] as $route) {
+			if ($route->match($request)) {
 				/* Set the root path for response */
-				$response->setRootPath($this->root_path);
+				$response->setCWD($this->directory);
 
 				$route->call($request, $response);
 				
@@ -129,19 +120,20 @@ class Router {
 				
 				http_response_code($response->status);
 				
-				$response->required_level = $this->get_level_str($route);
-				
-				if (!is_null($this->handlers[$response->status]))
-					call_user_func($this->handlers[$response->status], $request, $response);
-				
+				if (!is_null($this->handlers[$response->status])) {
+					$this->handlers[$response->status]($request, $response);
+				}
+
 				return false;
 			}
 		}
 		
 		http_response_code(404);
 		
-		if (!is_null($this->handlers[404]))
-			call_user_func($this->handlers[404], $request, $response);
+		// Call 404 handler if it's set
+		if (!is_null($this->handlers[404])) {
+			$this->handlers[404]($request, $response);
+		}
 		
 		return false;
 	}
