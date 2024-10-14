@@ -12,67 +12,96 @@ const VALID_PATH = "#^((\/)|(((\/" . PATH_REGULAR . ")|(\/" . PATH_REQUIRED . ")
 class PathStruct {
 	public array $segments = [];
 	public bool $absolute = false;
+
+	public function __construct(string ...$paths) {
+		foreach ($paths as $path) {
+			if (!empty($path)) {
+				// If first character of any path is a '/' then it's an absolute path.
+				// Any new absolute path overrides the previous path.
+				if ($path[0] === "/") {
+					$this->absolute = true;
+					$this->segments = [];
+				}
+
+				foreach (explode('/', $path) as $segment) {
+					if (!empty($segment) && $segment != '.') {
+						$this->segments[] = $segment;
+					}
+				}
+			}
+		}
+	}
+
+
+	public function normalize(): string {
+		$str = $this->absolute ? '/' : '';
+		$str .= join("/", $this->segments);
+		return $str;
+	}
+
+	public function __toString(): string {
+		return $this->normalize();
+	}
 }
 
 
 final class VirtualPath {
 
-	private static function destruct(string ...$values) {
-		$struct = new PathStruct();
-		
-		foreach ($values as $value) {
-			if (!empty($value)) {
-				if ($value[0] === "/") {
-					$struct->absolute = true;
-					$struct->segments = [];
+	public static function compile(string ...$paths): array {
+		$struct = new PathStruct(...$paths);
+
+		if (str_contains($struct, '|')) {
+			$results = [];
+
+			for ($i = 0; $i < count($struct->segments); $i++) {
+				if (str_contains($struct->segments[$i], '|')) {
+					$aliases = explode('|', $struct->segments[$i]);
+
+					foreach ($aliases as $alias) {
+						$ap = new PathStruct();
+						$ap->absolute = $struct->absolute;
+						for ($j = 0; $j < count($struct->segments); $j++) {
+							$ap->segments[] = ($i === $j) ? $alias : $struct->segments[$j];
+						}
+						$results = array_merge($results, self::compile($ap));
+					}
 				}
-				foreach (explode('/', $value) as $segment) {
-					if (!empty($segment) && $segment != '.')
-						$struct->segments[] = $segment;
+			}
+
+			return $results;
+		} else {
+			$opt_pos = [];
+
+			// Get positions of optional segments
+			foreach ($struct->segments as $k => $segment) {
+				if ($segment[0] == '?') {
+					$opt_pos[] = $k;
 				}
 			}
-		}
 
-		return $struct;
-	}
-
-
-	public static function build(string ...$values) {
-		$struct = self::destruct(...$values);
-		$path = self::resolve(...$values);
-
-		$optionals = [];
-		$opt_pos = [];
-
-		// Get positions of optional segments
-		foreach ($struct->segments as $k => $segment) {
-			if ($segment[0] == '?') {
-				$opt_pos[] = $k;
-			}
-		}
-
-		// Create paths
-		$pos = 0;
-		foreach ($opt_pos as $v) {
-			$s = [];
-			while ($pos < $v) {
-				$s[] = str_replace("?", "!", $struct->segments[$pos++]);
-			}
+			// Create optional paths
 			$pos = 0;
-			$opt = $struct->absolute ? '/': '';
-			$optionals[] = $opt . join('/', $s);
+			foreach ($opt_pos as $v) {
+				$s = [];
+				while ($pos < $v) {
+					$s[] = str_replace('?', '!', $struct->segments[$pos++]);
+				}
+				$pos = 0;
+				$opt = $struct->absolute ? '/': '';
+				$results[] = $opt . join('/', $s);
+			}
+
+			$results[] = str_replace('?', '!', $struct);
+
+			return $results;
 		}
-
-		$optionals[] = str_replace("?", "!", $path);
-
-		return $optionals;
 	}
 
 
-	public static function resolve(string ...$values): string {
-		$struct = self::destruct(...$values);
+	public static function resolve(string ...$paths): string {
+		$struct = new PathStruct(...$paths);
 		
-		// Resolve .. directories
+		// Resolve parent directories
 		for ($i = 0; $i < count($struct->segments); $i++) {
 			if ($struct->segments[$i] == '..') {
 				if ($i - 1 >= 0) {
@@ -83,16 +112,14 @@ final class VirtualPath {
 			}
 		}
 
-		// Remove all .. at the start of an absolute path
+		// Remove all parents at the start of an absolute path
 		if ($struct->absolute) {
 			while (array_key_exists(0, $struct->segments) && $struct->segments[0] == '..') {
 				array_splice($struct->segments, 0, 1);
 			}
 		}
 
-		$str = $struct->absolute ? '/' : '';
-		$str .= join("/", $struct->segments);
-		return $str;
+		return $struct->normalize();
 	}
 
 

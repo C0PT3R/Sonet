@@ -61,7 +61,7 @@ class Config {
 		UserGroup::get("basique")->grant("BASIC_ACCESS");
 	}
 
-	public static function get() {
+	public static function get(): Config {
 		if (!isset(self::$instance)) {
 			self::$instance = new Config();
 		}

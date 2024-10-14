@@ -30,46 +30,39 @@ class Router {
 	}
 	
 	
-	public function get(string|array $path, callable $handler, array $requirements = []) {
+	public function get(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('GET', $path, $handler, $requirements);
 	}
 	
 	
-	public function post(string|array $path, callable $handler, array $requirements = []) {
+	public function post(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('POST', $path, $handler, $requirements);
 	}
 	
 	
-	public function put(string|array $path, callable $handler, array $requirements = []) {
+	public function put(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('PUT', $path, $handler, $requirements);
 	}
 	
 	
-	public function delete(string|array $path, callable $handler, array $requirements = []) {
+	public function delete(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('DELETE', $path, $handler, $requirements);
 	}
 	
 	
-	private function createRoute(string $method, string $path, callable $handler, array $privileges) {
-		if (is_array($path)) {
-			foreach ($path as $p) {
-				$routes[] = $this->createRoute($method, $p, $handler, $privileges);
-			}
-			return $routes;
-		} else {
-			$v_path = VirtualPath::build($this->directory, $path);
+	private function createRoute(string $method, string $path, callable $handler, array $privileges): Route {
+		$v_paths = VirtualPath::compile($this->directory, $path);
 
-			foreach ($v_path as $p) {
-				$route = new Route($this, $p, $handler, $privileges);
-				self::$routes[$method][] = $route;
-			}
-			
-			return $route;
+		foreach ($v_paths as $vp) {
+			$route = new Route($this, $vp, $handler, $privileges);
+			self::$routes[$method][] = $route;
 		}
+		
+		return $route;
 	}
 	
 	
-	public function on(int|string $status, callable $handler) {
+	public function on(int|string $status, callable $handler): void {
 		if (!is_callable($handler))
 			trigger_error("Handler is not callable", E_USER_ERROR);
 		
@@ -93,7 +86,7 @@ class Router {
 	}
 	
 	
-	public function match($request) {
+	public function match($request): bool {
 		if ($this->directory === '/')
 			return true;
 		
@@ -108,7 +101,7 @@ class Router {
 	}
 	
 	
-	public function callRoute($request, $response) {
+	public function callRoute($request, $response): bool {
 		foreach (self::$routes[$request->method] as $route) {
 			if ($route->match($request)) {
 				/* Set the root path for response */

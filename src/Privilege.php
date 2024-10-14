@@ -12,7 +12,7 @@ class Privilege {
 		$this->name = $name;
 	}
 
-	public static function create($name) {
+	public static function create($name): void {
 		self::$privileges[] = new self($name);
 	}
 

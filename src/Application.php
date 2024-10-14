@@ -3,7 +3,7 @@
 namespace Sonet;
 
 
-final class Core extends Router {
+final class Application extends Router {
 
 	private static $instance;
 	private $database;
@@ -32,7 +32,7 @@ final class Core extends Router {
 	}
 
 
-	public static function getApp() {
+	public static function getApp(): Application {
 		if (is_null(self::$instance))
 			self::$instance = new self;
 
@@ -40,15 +40,15 @@ final class Core extends Router {
 	}
 
 
-	public function mount($routes_file, $target = '/') {
-		if ($target == '/') {
+	public function mount($routes_file, $path = '/'): Application|Router {
+		if ($path == '/') {
 			$router = $this;
-			$this->directory = $target;
+			$this->directory = $path;
 		} else {
-			if (!isset($this->routers[$target]))
-				$this->routers[$target] = new Router($target);
+			if (!isset($this->routers[$path]))
+				$this->routers[$path] = new Router($path);
 
-			$router = $this->routers[$target];
+			$router = $this->routers[$path];
 		}
 
 		require_once $routes_file;
@@ -57,7 +57,7 @@ final class Core extends Router {
 	}
 
 
-	public function run() {
+	public function run(): bool {
 		foreach ($this->routers as $router) {
 			if ($router->match($this->request)) {
 				return $router->callRoute($this->request, $this->response);

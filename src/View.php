@@ -24,7 +24,7 @@ final class View implements Cacheable {
 			'path' => "/{$this->templates_path}",
 			'fieldnames' => Config::get()->fieldnames,
 			'user' => [
-				'username' => $_SESSION['username'] ?? "Guest" . uniqid(),
+				'username' => $_SESSION['username'] ?? "Guest_" . uniqid(),
 				'group'    => $_SESSION['user_group'] ?? "guest",
 				'isLogged' => (!empty($_SESSION['user_group'])) ? true : false,
 				'isAdmin'  => (isset($_SESSION['user_group']) && $_SESSION['user_group'] == "administrateur") ? true : false
@@ -37,7 +37,7 @@ final class View implements Cacheable {
 	}
 	
 	
-	public static function periodic($period, $template, $data = []) {
+	public static function periodic($period, $template, $data = []): View {
 		$instance = new self($template, $data);
 		$instance->period = $period;
 		return $instance;
@@ -55,7 +55,7 @@ final class View implements Cacheable {
 	}
 	
 	
-	public function assign() {
+	public function assign(): static {
 		$args = func_get_args();
 		
 		if (count($args) === 1 && is_array($args[0])) {
@@ -74,7 +74,7 @@ final class View implements Cacheable {
 	}
 	
 	
-	public function prepare($prerender) {
+	public function prepare($prerender): static {
 		if (is_callable($prerender))
 			$this->prerenders[] = \Closure::bind($prerender, $this);
 		else
@@ -84,7 +84,7 @@ final class View implements Cacheable {
 	}
 	
 	
-	public function render() {
+	public function render(): string {
 		foreach ($this->prerenders as $prerender) $prerender($this);
 		return $this->engine->render($this->template, $this->context);
 	}

@@ -20,7 +20,7 @@ class Route {
 	}
 	
 	
-	public function match($request) {
+	public function match($request): bool {
 		return VirtualPath::matchesURI($this->path, $request->uri);
 	}
 	
