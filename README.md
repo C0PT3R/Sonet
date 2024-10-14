@@ -22,7 +22,7 @@ $app = Sonet\Application::getApp();
 
 $app->get('hello|h/?name', function ($req, $res) {
 	$name = $req->params->name ?? 'world';
-	$res->html("Hello, $name!", ['title' => 'Hello from Sonet']);
+	$res->html("Hello, $name!");
 });
 
 $app->run();
