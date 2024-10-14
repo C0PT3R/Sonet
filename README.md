@@ -21,10 +21,7 @@ $app = Sonet\Application::getApp();
 
 $app->get('h|hello/?name', function ($req, $res) {
 	$name = $req->params->name ?? 'world';
-	$res->html([
-		'title' => 'Hello from Sonet',
-		'body' => "Hello, $name!"
-	]);
+	$res->html("Hello, $name!", ['title' => 'Hello from Sonet']);
 });
 
 $app->run();
