@@ -6,7 +6,7 @@ namespace Sonet;
 class Response {
 	
 	public $status;
-	private $cwd;
+	private VirtualPath $path;
 	public $requirements;
 	
 	
@@ -32,12 +32,12 @@ class Response {
 	}
 
 
-	public function setCWD($path) {
-		$this->cwd = $path;
+	public function setPath(VirtualPath $path) {
+		$this->path = $path;
 	}
 	
 	
-	public function redirect($location) {
+	public function redirect(string $location) {
 		$domain_host = $_SERVER['HTTP_HOST'];
 		$referer_host = isset($_SERVER["HTTP_REFERER"]) ? parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) : $domain_host;
 
@@ -48,10 +48,10 @@ class Response {
 		if ($location == "#referer") {
 			$location = isset($_SERVER["HTTP_REFERER"]) ? parse_url($_SERVER["HTTP_REFERER"], PHP_URL_PATH) : "/";
 		} else {
-			$location = VirtualPath::resolve($this->cwd, $location);
+			$path = new VirtualPath($this->path, $location);
+			$location = $path->resolve();
 		}
 
-		//echo VirtualPath::resolve($this->cwd, $location);
 		header("location: $location");
 	}
 

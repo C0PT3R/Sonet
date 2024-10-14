@@ -14,12 +14,13 @@ final class Application extends Router {
 
 
 	private function __construct() {
+		// Application router is mounted on '/'
 		parent::__construct('/');
 
-		$dbconf = Config::get()->database;
+		$db = Config::get()->database;
 
 		try {
-			$this->database = new \PDO($dbconf->DSN, $dbconf->user, $dbconf->password);
+			$this->database = new \PDO($db->DSN, $db->user, $db->password);
 		} catch (\Exception $e) {
 			exit('PDO ERROR: ' . $e->getMessage());
 		}
@@ -43,7 +44,6 @@ final class Application extends Router {
 	public function mount($routes_file, $path = '/'): Application|Router {
 		if ($path == '/') {
 			$router = $this;
-			$this->directory = $path;
 		} else {
 			if (!isset($this->routers[$path]))
 				$this->routers[$path] = new Router($path);
@@ -59,11 +59,12 @@ final class Application extends Router {
 
 	public function run(): bool {
 		foreach ($this->routers as $router) {
-			if ($router->match($this->request)) {
+			if ($router->match($this->request->uri)) {
 				return $router->callRoute($this->request, $this->response);
 			}
 		}
 
+		// If URI doesn't match any router, call application router.
 		return $this->callRoute($this->request, $this->response);
 	}
 

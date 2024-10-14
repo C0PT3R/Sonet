@@ -5,7 +5,7 @@ namespace Sonet;
 
 class Router {
 	
-	public $directory;
+	public VirtualPath $path;
 	
 	private static $routes = [
 		'GET'    => [],
@@ -25,8 +25,8 @@ class Router {
 	];
 	
 	
-	public function __construct($directory) {
-		$this->directory = VirtualPath::resolve($directory);
+	public function __construct(string $path) {
+		$this->path = new VirtualPath($path);
 	}
 	
 	
@@ -51,10 +51,10 @@ class Router {
 	
 	
 	private function createRoute(string $method, string $path, callable $handler, array $privileges): Route {
-		$v_paths = VirtualPath::compile($this->directory, $path);
+		$v_paths = VirtualPath::compile($this->path, $path);
 
 		foreach ($v_paths as $vp) {
-			$route = new Route($this, $vp, $handler, $privileges);
+			$route = new Route($vp, $handler, $privileges);
 			self::$routes[$method][] = $route;
 		}
 		
@@ -86,26 +86,16 @@ class Router {
 	}
 	
 	
-	public function match($request): bool {
-		if ($this->directory === '/')
-			return true;
-		
-		$request_segments = explode('/', trim($request->uri, '/'));
-		$router_segments  = explode('/', trim($this->directory, '/'));
-		
-		foreach ($router_segments as $k=>$v) {
-			if ($request_segments[$k] != $v) return false;
-		}
-		
-		return true;
+	public function match(string $uri): bool {
+		return $this->path->contains($uri);
 	}
 	
 	
-	public function callRoute($request, $response): bool {
+	public function callRoute(Request $request, Response $response): bool {
 		foreach (self::$routes[$request->method] as $route) {
 			if ($route->match($request)) {
 				/* Set the root path for response */
-				$response->setCWD($this->directory);
+				$response->setPath($this->path);
 
 				$route->call($request, $response);
 				
