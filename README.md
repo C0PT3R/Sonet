@@ -28,9 +28,9 @@ $app->run();
 ```
 This VirtualPath corresponds to:
 - /hello
-- /hello/[any value]
+- /hello/([^/]+)
 - /h
-- /h/[any value]
+- /h/([^/]+)
 ### For example,
 - ```/hello``` will send "Hello, world!"
 - ```/h/Einstein``` will send "Hello, Einstein!"
