@@ -27,10 +27,10 @@ $app->get('hello|h/?name', function ($req, $res) {
 $app->run();
 ```
 This VirtualPath corresponds to:
-- /hello
-- /hello/([^/]+)
-- /h
-- /h/([^/]+)
+- ```/hello```
+- ```/hello/([^/]+)```
+- ```/h```
+- ```/h/([^/]+)```
 ### For example,
 - ```/hello``` will send "Hello, world!"
 - ```/h/Einstein``` will send "Hello, Einstein!"
