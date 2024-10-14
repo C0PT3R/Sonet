@@ -1,3 +1,7 @@
+Sonet
+
+A simple PHP framework for creating websites and/or web APIs.
+
 Main concepts:
 - VirtualPath: 
 - Route: 
