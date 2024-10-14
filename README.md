@@ -13,3 +13,19 @@ Other things too... maybe one day I'll make a doc for it.
 - Request: A predefined object that contains information about the requested resource.
 - Response: A predefined object that contains information about the response to be sent.
 - Handler: A user defined callable that accepts Request and Response as parameters. It can be assigned to a Route or a StatusEvent.
+
+## Example code:
+```
+<?php
+
+require_once "vendor/autoload.php";
+
+$app = Sonet\Application::getApp();
+
+$app->get('h|hello/?name', function ($req, $res) {
+	$name = $req->params->name ?? "world";
+	$res->send("Hello, $name!");
+});
+
+$app->run();
+```
