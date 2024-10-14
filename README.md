@@ -2,6 +2,7 @@
 
 ### A simple PHP framework for creating websites and/or web APIs.
 It supports routing of HTTP requests with methods GET, POST, PUT and DELETE.
+Other things too... maybe one day I'll make a doc for it.
 
 ## Main concepts:
 - Application: 
