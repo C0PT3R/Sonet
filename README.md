@@ -22,7 +22,7 @@ require_once "vendor/autoload.php";
 
 $app = Sonet\Application::getApp();
 
-$app->get('h|hello/?name', function ($req, $res) {
+$app->get('hello|h/?name', function ($req, $res) {
 	$name = $req->params->name ?? "world";
 	$res->send("Hello, $name!");
 });
