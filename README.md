@@ -32,5 +32,5 @@ This VirtualPath corresponds to:
 - ```/h```
 - ```/h/([^/]+)```
 ### For example,
-- ```/hello``` will send "Hello, world!"
-- ```/h/Einstein``` will send "Hello, Einstein!"
+- ```/hello``` will generate "Hello, world!"
+- ```/h/Einstein``` will generate "Hello, Einstein!"
