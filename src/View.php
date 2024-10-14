@@ -14,7 +14,10 @@ final class View implements Cacheable {
 	
 	
 	public function __construct($template, $context = []) {
-		$loader = new \Twig\Loader\FilesystemLoader("./{$this->templates_path}");
+		$loader = new \Twig\Loader\FilesystemLoader(
+			__DIR__ . DIRECTORY_SEPARATOR . 'system',
+			"./{$this->templates_path}"
+		);
 		
 		$this->engine = new \Twig\Environment($loader, [
 			'cache' => './cache/twig',
@@ -34,13 +37,6 @@ final class View implements Cacheable {
 		$this->assign($context);
 		
 		$this->template  = $template;
-	}
-	
-	
-	public static function periodic($period, $template, $data = []): View {
-		$instance = new self($template, $data);
-		$instance->period = $period;
-		return $instance;
 	}
 	
 	
@@ -85,7 +81,7 @@ final class View implements Cacheable {
 	
 	
 	public function render(): string {
-		foreach ($this->prerenders as $prerender) $prerender($this);
+		foreach ($this->prerenders as $prerender) $prerender();
 		return $this->engine->render($this->template, $this->context);
 	}
 	

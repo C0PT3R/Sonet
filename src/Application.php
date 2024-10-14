@@ -14,7 +14,7 @@ final class Application extends Router {
 
 
 	private function __construct() {
-		// Application router is mounted on '/'
+		/* Application router is mounted on '/' */
 		parent::__construct('/');
 
 		$db = Config::get()->database;
@@ -29,7 +29,8 @@ final class Application extends Router {
 		$this->request = new Request($this->user);
 		$this->response = new Response();
 
-		$this->mount(__DIR__ . DIRECTORY_SEPARATOR . 'system_routes.php', '/system');
+		/* Mount system router */
+		$this->mount(__DIR__ . DIRECTORY_SEPARATOR . 'system' . DIRECTORY_SEPARATOR . 'routes.php', '/system');
 	}
 
 
@@ -41,7 +42,15 @@ final class Application extends Router {
 	}
 
 
-	public function mount($routes_file, $path = '/'): Application|Router {
+	/**
+	 * Creates the routes defined in $routes_file in the corresponding Router.
+	 * If no Router is mounted on $path, one will be created and mounted.
+	 * If $path is not specified, routes will be created in the main application router.
+	 * @param string $routes_file The path to the routes file.
+	 * @param string $path The virtual path that the Router should handle.
+	 * @return \Sonet\Application|\Sonet\Router The Router wich has been used.
+	 */
+	public function mount(string $routes_file, string $path = '/'): Application|Router {
 		if ($path == '/') {
 			$router = $this;
 		} else {
@@ -57,15 +66,20 @@ final class Application extends Router {
 	}
 
 
+	/**
+	 * Runs the application. MUST be called at the end of your program.
+	 * @return bool
+	 */
 	public function run(): bool {
+		/* Check for a sub-router that matches the requested URI */
 		foreach ($this->routers as $router) {
-			if ($router->match($this->request->uri)) {
-				return $router->callRoute($this->request, $this->response);
+			if ($router->shouldHandle($this->request->uri)) {
+				return $router->handle($this->request, $this->response);
 			}
 		}
 
-		// If URI doesn't match any router, call application router.
-		return $this->callRoute($this->request, $this->response);
+		/* If none of the sub-routers matches URI, use main application router. */
+		return $this->handle($this->request, $this->response);
 	}
 
 }

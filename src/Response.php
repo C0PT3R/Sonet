@@ -26,6 +26,13 @@ class Response {
 	}
 	
 	
+	public function html($body) {
+		$this->send(new View('./wrapper.html', [
+			'body' => $body
+		]));
+	}
+	
+	
 	public function json($body) {
 		header('Content-type: application/json');
 		echo json_encode($body);

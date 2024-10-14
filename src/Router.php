@@ -5,9 +5,9 @@ namespace Sonet;
 
 class Router {
 	
-	public VirtualPath $path;
+	private VirtualPath $path;
 	
-	private static $routes = [
+	private $routes = [
 		'GET'    => [],
 		'POST'   => [],
 		'PUT'    => [],
@@ -25,43 +25,89 @@ class Router {
 	];
 	
 	
+	/**
+	 * Users SHOULD NOT manually create a Router, as it will not be registered, and hence will never be called.
+	 * @param string $path
+	 */
 	public function __construct(string $path) {
 		$this->path = new VirtualPath($path);
 	}
 	
 	
+	/**
+	 * Creates a route in GET mode.
+	 * @param string $path A virtual path that the route should handle.
+	 * @param callable $handler A callable that accepts Request and Response.
+	 * @param array $requirements An array of required Privileges.
+	 * @return \Sonet\Route
+	 */
 	public function get(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('GET', $path, $handler, $requirements);
 	}
 	
 	
+	/**
+	 * Creates a route in POST mode.
+	 * @param string $path A virtual path that the route should respond to.
+	 * @param callable $handler A callable that accepts Request and Response.
+	 * @param array $requirements An array of required Privileges.
+	 * @return \Sonet\Route
+	 */
 	public function post(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('POST', $path, $handler, $requirements);
 	}
 	
 	
+	/**
+	 * Creates a route in PUT mode.
+	 * @param string $path A virtual path that the route should respond to.
+	 * @param callable $handler A callable that accepts Request and Response.
+	 * @param array $requirements An array of required Privileges.
+	 * @return \Sonet\Route
+	 */
 	public function put(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('PUT', $path, $handler, $requirements);
 	}
 	
 	
+	/**
+	 * Creates a route in DELETE mode.
+	 * @param string $path A virtual path that the route should respond to.
+	 * @param callable $handler A callable that accepts Request and Response.
+	 * @param array $requirements An array of required Privileges.
+	 * @return \Sonet\Route
+	 */
 	public function delete(string $path, callable $handler, array $requirements = []): Route {
 		return $this->createRoute('DELETE', $path, $handler, $requirements);
 	}
 	
-	
+
+	/**
+	 * Handles creation of routes.
+	 * @param string $method
+	 * @param string $path
+	 * @param callable $handler
+	 * @param array $privileges
+	 * @return \Sonet\Route
+	 */
 	private function createRoute(string $method, string $path, callable $handler, array $privileges): Route {
 		$v_paths = VirtualPath::compile($this->path, $path);
 
 		foreach ($v_paths as $vp) {
 			$route = new Route($vp, $handler, $privileges);
-			self::$routes[$method][] = $route;
+			$this->routes[$method][] = $route;
 		}
 		
 		return $route;
 	}
 	
 	
+	/**
+	 * Assigns a handler to a defined status.
+	 * @param int|string $status Can be a status number or corresponding alias.
+	 * @param callable $handler	A callable that accepts Request and Response.
+	 * @return void
+	 */
 	public function on(int|string $status, callable $handler): void {
 		if (!is_callable($handler))
 			trigger_error("Handler is not callable", E_USER_ERROR);
@@ -84,16 +130,30 @@ class Router {
 		
 		$this->handlers[$status] = $handler;
 	}
-	
-	
-	public function match(string $uri): bool {
-		return $this->path->contains($uri);
+
+
+	/**
+	 * Checks wether a router should handle a call or not.
+	 * @param string $uri
+	 * @return bool
+	 */
+	public function shouldHandle(string $uri): bool {
+		/* If user is requesting domain's root path, only main application router should respond. */
+		if ($uri === '/') return false;
+
+		$uri = new VirtualPath($uri);
+		
+		for ($i = 0; $i < count($this->path->segments); $i++) {
+			if ($this->path->segments[$i] !== $uri->segments[$i]) return false;
+		}
+
+		return true;
 	}
 	
 	
-	public function callRoute(Request $request, Response $response): bool {
-		foreach (self::$routes[$request->method] as $route) {
-			if ($route->match($request)) {
+	public function handle(Request $request, Response $response): bool {
+		foreach ($this->routes[$request->method] as $route) {
+			if ($route->match($request->uri)) {
 				/* Set the root path for response */
 				$response->setPath($this->path);
 

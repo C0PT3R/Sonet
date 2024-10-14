@@ -18,8 +18,8 @@ class Route {
 	}
 	
 	
-	public function match($request): bool {
-		return $this->path->matches($request->uri);
+	public function match(string $uri): bool {
+		return $this->path->matches($uri);
 	}
 	
 	

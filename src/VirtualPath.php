@@ -35,19 +35,6 @@ final class VirtualPath {
 	}
 
 
-	public function contains(string $haystack): bool {
-		$haystack = new self($haystack);
-
-		if (!isset($haystack->segments[0]) || !isset($this->segments[0])) return true;
-		
-		for ($i = 0; $i < count($this->segments); $i++) {
-			if ($haystack->segments[$i] !== $this->segments[$i]) return false;
-		}
-
-		return true;
-	}
-
-
 	public function matches(string $uri): bool {
 		$pattern = preg_replace("#" . PATH_REQUIRED . "#", '[^/]+', trim($this, '/'));
 		return preg_match("#^$pattern$#", trim($uri, '/')) ? true : false;
@@ -92,17 +79,17 @@ final class VirtualPath {
 		$params = new \stdClass();
 
 		// Get params names
-		if (!preg_match_all("#" . PATH_REQUIRED . "#", $this, $pnames)) return null;
-		$pnames = $pnames[1];
+		if (!preg_match_all("#" . PATH_REQUIRED . "#", $this, $names)) return null;
+		$names = $names[1];
 
 		// Get params values
 		$pattern = preg_replace("#" . PATH_REQUIRED . "#", '([^/]+)', trim($this, '/'));
-		if (!preg_match("#^$pattern$#", trim($uri, '/'), $pvals)) return null;
-		array_shift($pvals); // Remove the first item as it's not relevant
+		if (!preg_match("#^$pattern$#", trim($uri, '/'), $values)) return null;
+		array_shift($values); // Remove the first item as it's not relevant
 
 		// Assign params
-		for ($i = 0; $i < count($pvals); $i++) {
-			$params->{$pnames[$i]} = $pvals[$i];
+		for ($i = 0; $i < count($values); $i++) {
+			$params->{$names[$i]} = urldecode($values[$i]);
 		}
 
 		return $params;
