@@ -19,7 +19,7 @@ This code creates a Route that will listen for a request using HTTP method GET.
 ```php
 $app = Sonet\Application::getApp();
 
-$app->get('h|hello/?name', function ($req, $res) {
+$app->get('hello|h/?name', function ($req, $res) {
 	$name = $req->params->name ?? 'world';
 	$res->html("Hello, $name!", ['title' => 'Hello from Sonet']);
 });
