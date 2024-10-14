@@ -26,7 +26,7 @@ $app->get('hello|h/?name', function ($req, $res) {
 
 $app->run();
 ```
-This VirtualPath will correspond to:
+This VirtualPath corresponds to:
 - /hello
 - /hello/[any value]
 - /h
