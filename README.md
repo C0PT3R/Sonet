@@ -26,7 +26,7 @@ $app->get('hello|h/?name', function ($req, $res) {
 
 $app->run();
 ```
-It will respond to:
+This route will respond to:
 - /hello
 - /hello/[any value]
 - /h
