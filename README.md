@@ -1,4 +1,4 @@
-# Sonet
+# Sonet (work in progress)
 
 ### A simple PHP framework for creating websites and/or web APIs.
 
