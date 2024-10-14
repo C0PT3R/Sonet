@@ -31,6 +31,6 @@ It will respond to:
 - /hello/[any value]
 - /h
 - /h/[any value]
-For example,
+### For example,
 ```/hello``` will send "Hello, world!"
-```/h/Einstein``` will send "Hello, Einstein"
+```/h/Einstein``` will send "Hello, Einstein!"
