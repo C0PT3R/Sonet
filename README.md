@@ -15,6 +15,7 @@ Other things too... maybe one day I'll make a doc for it.
 - Handler: A user defined callable that accepts Request and Response as parameters. It can be assigned to a Route or a StatusEvent.
 
 ## Example code:
+This code creates a Route that will only listen to HTTP method GET.
 ```php
 $app = Sonet\Application::getApp();
 
@@ -25,3 +26,8 @@ $app->get('hello|h/?name', function ($req, $res) {
 
 $app->run();
 ```
+It will respond to:
+- /hello
+- /hello/[any value]
+- /h
+- /h/[any value]
