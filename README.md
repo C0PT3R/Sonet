@@ -5,7 +5,7 @@ It supports routing of HTTP requests with methods GET, POST, PUT and DELETE.
 Other things too... maybe one day I'll make a doc for it.
 
 ## Main concepts:
-- Application: A global container for all application data. Is also the main application Router itself.
+- Application: A global container for all application data. Is also a Router itself (main application Router).
 - VirtualPath: An extended path that can contain variables, options and aliases.
 - Router: An object that contains Routes and is mounted to a VirtualPath. You can have as many as you want.
 - Route: An object created by a Router and mounted onto it.
