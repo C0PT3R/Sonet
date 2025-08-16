@@ -78,7 +78,7 @@ final class Application extends Router {
 			}
 		}
 
-		/* If none of the sub-routers matches URI, use main application router. */
+		/* If none of the sub-routers matched URI, use main application router. */
 		return $this->handle($this->request, $this->response);
 	}
 

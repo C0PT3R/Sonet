@@ -26,10 +26,10 @@ class Response {
 	}
 	
 	
-	public function html($body) {
-		$this->send(new View('./wrapper.html', [
-			'body' => $body
-		]));
+	public function html($body, $context = []) {
+		$view = new View('./blank.html', ['body' => $body]);
+		$view->assign($context);
+		$this->send($view);
 	}
 	
 	

@@ -14,10 +14,10 @@ final class View implements Cacheable {
 	
 	
 	public function __construct($template, $context = []) {
-		$loader = new \Twig\Loader\FilesystemLoader(
+		$loader = new \Twig\Loader\FilesystemLoader([
 			__DIR__ . DIRECTORY_SEPARATOR . 'system',
 			"./{$this->templates_path}"
-		);
+		]);
 		
 		$this->engine = new \Twig\Environment($loader, [
 			'cache' => './cache/twig',
