@@ -6,8 +6,9 @@ namespace Sonet;
 class Response {
 	
 	public $status;
-	private VirtualPath $path;
+	private VirtualPath $rootPath;
 	public $requirements;
+	public ?Route $route = null;
 	
 	
 	public function send($body) {
@@ -39,8 +40,8 @@ class Response {
 	}
 
 
-	public function setPath(VirtualPath $path) {
-		$this->path = $path;
+	public function setRootPath(VirtualPath $path) {
+		$this->rootPath = $path;
 	}
 	
 	
@@ -55,7 +56,7 @@ class Response {
 		if ($location == "#referer") {
 			$location = isset($_SERVER["HTTP_REFERER"]) ? parse_url($_SERVER["HTTP_REFERER"], PHP_URL_PATH) : "/";
 		} else {
-			$path = new VirtualPath($this->path, $location);
+			$path = new VirtualPath($this->rootPath, $location);
 			$location = $path->resolve();
 		}
 

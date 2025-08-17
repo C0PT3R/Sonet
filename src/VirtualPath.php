@@ -19,7 +19,7 @@ final class VirtualPath {
 		foreach ($paths as $path) {
 			if (!empty($path)) {
 				// If first character of any path is a '/' then it's an absolute path.
-				// Any new absolute path overrides the previous path.
+				// Any new absolute path erases the previous path.
 				if ($path[0] === "/") {
 					$this->absolute = true;
 					$this->segments = [];
@@ -32,6 +32,17 @@ final class VirtualPath {
 				}
 			}
 		}
+	}
+
+	
+	public static function secure($path) {
+		// Parent path access is prohibited in route paths.
+		$path = str_replace('..', '', $path);
+
+		// Remove all slashes at the start of route path to prevent it from being treated as absolute.
+		while (!empty($path) && $path[0] === '/') $path = substr($path, 1);
+
+		return $path;
 	}
 
 
@@ -73,7 +84,7 @@ final class VirtualPath {
 	/**
 	 * Extracts params by comparing to URI
 	 * @param string $uri
-	 * @return \stdClass|null
+	 * @return \stdClass|null An object key values......
 	 */
 	public function parse(string $uri): \stdClass|null {
 		$params = new \stdClass();
@@ -102,7 +113,7 @@ final class VirtualPath {
 	public static function compile(string ...$paths): array {
 		$struct = new self(...$paths);
 
-		/* Manage aliased path segments, if present */
+		/* Manage aliased path segments, if any */
 		if (str_contains($struct, '|')) {
 			$results = [];
 

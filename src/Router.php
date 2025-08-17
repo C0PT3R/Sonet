@@ -5,7 +5,7 @@ namespace Sonet;
 
 class Router {
 	
-	private VirtualPath $path;
+	private VirtualPath $rootPath;
 	
 	private $routes = [
 		'GET'    => [],
@@ -29,8 +29,8 @@ class Router {
 	 * Users SHOULD NOT manually create a Router, as it will not be registered, and hence will never be called.
 	 * @param string $path
 	 */
-	public function __construct(string $path) {
-		$this->path = new VirtualPath($path);
+	public function __construct(string $rootPath) {
+		$this->rootPath = new VirtualPath($rootPath);
 	}
 	
 	
@@ -91,9 +91,7 @@ class Router {
 	 * @return \Sonet\Route
 	 */
 	private function createRoute(string $method, string $path, callable $handler, array $privileges): Route {
-		$v_paths = VirtualPath::compile($this->path, $path);
-
-		foreach ($v_paths as $vp) {
+		foreach (VirtualPath::compile($this->rootPath, VirtualPath::secure($path)) as $vp) {
 			$route = new Route($vp, $handler, $privileges);
 			$this->routes[$method][] = $route;
 		}
@@ -103,8 +101,8 @@ class Router {
 	
 	
 	/**
-	 * Assigns a handler to a defined status.
-	 * @param int|string $status Can be a status number or corresponding alias.
+	 * Assigns a handler to a status event.
+	 * @param int|string $status Can be an HTTP status number or corresponding alias.
 	 * @param callable $handler	A callable that accepts Request and Response.
 	 * @return void
 	 */
@@ -134,17 +132,16 @@ class Router {
 
 	/**
 	 * Checks wether a router should handle a call or not.
-	 * @param string $uri
+	 * @param string $path
 	 * @return bool
 	 */
-	public function shouldHandle(string $uri): bool {
-		/* If user is requesting domain's root path, only main application router should respond. */
-		if ($uri === '/') return false;
+	public function shouldHandle(string $path): bool {
+		if ($path === '/') return false; // Only main application router can handle root path.
 
-		$uri = new VirtualPath($uri);
+		$path = new VirtualPath($path);
 		
-		for ($i = 0; $i < count($this->path->segments); $i++) {
-			if ($this->path->segments[$i] !== $uri->segments[$i]) return false;
+		for ($i = 0; $i < count($this->rootPath->segments); $i++) {
+			if ($this->rootPath->segments[$i] !== $path->segments[$i]) return false;
 		}
 
 		return true;
@@ -153,9 +150,11 @@ class Router {
 	
 	public function handle(Request $request, Response $response): bool {
 		foreach ($this->routes[$request->method] as $route) {
-			if ($route->match($request->uri)) {
+			if ($route->match($request->path)) {
 				/* Set the root path for response */
-				$response->setPath($this->path);
+				$response->setRootPath($this->rootPath);
+
+				$response->route = $route;
 
 				$route->call($request, $response);
 				

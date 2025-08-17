@@ -73,7 +73,7 @@ final class Application extends Router {
 	public function run(): bool {
 		/* Check for a sub-router that matches the requested URI */
 		foreach ($this->routers as $router) {
-			if ($router->shouldHandle($this->request->uri)) {
+			if ($router->shouldHandle($this->request->path)) {
 				return $router->handle($this->request, $this->response);
 			}
 		}

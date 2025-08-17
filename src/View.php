@@ -24,7 +24,6 @@ final class View implements Cacheable {
 		]);
 
 		$this->assign([
-			'path' => "/{$this->templates_path}",
 			'fieldnames' => Config::get()->fieldnames,
 			'user' => [
 				'username' => $_SESSION['username'] ?? "Guest_" . uniqid(),
@@ -51,7 +50,7 @@ final class View implements Cacheable {
 	}
 	
 	
-	public function assign(): static {
+	public function assign() {
 		$args = func_get_args();
 		
 		if (count($args) === 1 && is_array($args[0])) {
@@ -70,7 +69,7 @@ final class View implements Cacheable {
 	}
 	
 	
-	public function prepare($prerender): static {
+	public function prepare($prerender) {
 		if (is_callable($prerender))
 			$this->prerenders[] = \Closure::bind($prerender, $this);
 		else

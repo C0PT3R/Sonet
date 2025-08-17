@@ -5,21 +5,21 @@ namespace Sonet;
 
 class Route {
 
-	private VirtualPath $path;
+	public VirtualPath $vPath;
 	private $handler;
 	public array $requirements;
 	private array $params = [];
 	
 	
 	public function __construct(string $path, callable $handler, array $requirements) {
-		$this->path = new VirtualPath($path);
+		$this->vPath = new VirtualPath($path);
 		$this->handler = $handler;
 		$this->requirements = $requirements;
 	}
 	
 	
 	public function match(string $uri): bool {
-		return $this->path->matches($uri);
+		return $this->vPath->matches($uri);
 	}
 	
 	
@@ -31,7 +31,7 @@ class Route {
 	
 	public function call($request, $response) {
 		if ($this->checkUserPrivilege()) {
-			$request->params = $this->path->parse($request->uri);
+			$request->params = $this->vPath->parse($request->path);
 			
 			$response->status = 200;
 
